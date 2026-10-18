@@ -22,7 +22,7 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2019_64'
-          modules: 'qtmultimedia qtsvg'
+          modules: 'qtmultimedia'
 
       - name: Setup MSVC Compiler
         uses: ilammy/msvc-dev-cmd@v1
