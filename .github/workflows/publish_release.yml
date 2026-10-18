@@ -1,0 +1,46 @@
+name: Publish Windows Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Workflow run ID containing build artifacts'
+        required: true
+        default: '39122770467'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts from Run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release-files
+          gh run download ${{ inputs.run_id }} -n StudioScreen-Windows-Installer --dir release-files
+          gh run download ${{ inputs.run_id }} -n StudioScreen-Windows-x64-Portable --dir release-files
+          ls -lh release-files
+
+      - name: Create Official GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v1.0.0 \
+            release-files/StudioScreen_Setup_v1.0.0.exe \
+            release-files/StudioScreen-Windows-x64-Portable.zip \
+            --title "StudioScreen AI v1.0.0 for Windows" \
+            --notes "### StudioScreen AI v1.0.0 for Windows (64-bit)
+
+          Official release package for Windows 10 & 11 (64-bit).
+
+          #### 📥 Download Options:
+          - **[StudioScreen_Setup_v1.0.0.exe](https://github.com/vinothyolocolab-boop/StudioScreen/releases/download/v1.0.0/StudioScreen_Setup_v1.0.0.exe)** (Recommended)
+            Single-file setup installer wizard with desktop & start menu shortcuts.
+          - **[StudioScreen-Windows-x64-Portable.zip](https://github.com/vinothyolocolab-boop/StudioScreen/releases/download/v1.0.0/StudioScreen-Windows-x64-Portable.zip)**
+            Portable standalone zip package (zero installation required)."
