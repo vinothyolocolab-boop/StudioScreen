@@ -1,0 +1,65 @@
+name: Build StudioScreen for Windows
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6.7
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.7.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          modules: 'qtmultimedia qtsvg'
+
+      - name: Setup MSVC Compiler
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: 'release'
+
+      - name: Build & Package StudioScreen
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\windows\build_windows.ps1 -BuildType Release
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup -y --no-progress
+
+      - name: Compile Inno Setup Installer
+        shell: powershell
+        continue-on-error: true
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" .\windows\installer_inno.iss
+
+      - name: Create Portable Zip
+        shell: powershell
+        run: |
+          Compress-Archive -Path dist\StudioScreen-Windows-x64\* -DestinationPath dist\StudioScreen-Windows-x64-Portable.zip
+
+      - name: Upload Windows Standalone Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudioScreen-Windows-x64-Portable
+          path: dist\StudioScreen-Windows-x64-Portable.zip
+
+      - name: Upload Windows Setup Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudioScreen-Windows-Installer
+          path: dist\StudioScreen_Setup_v1.0.0.exe
