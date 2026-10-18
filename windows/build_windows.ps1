@@ -23,6 +23,13 @@ Set-Location $ProjectRoot
 Write-Host "[1/6] Project Root: $ProjectRoot" -ForegroundColor Green
 
 # 2. Detect or Validate Qt Installation
+if (-not $QtPath -and $env:QT_ROOT -and (Test-Path "$env:QT_ROOT\bin\qmake.exe")) {
+    $QtPath = $env:QT_ROOT
+}
+if (-not $QtPath -and $env:Qt6_DIR -and (Test-Path "$env:Qt6_DIR\bin\qmake.exe")) {
+    $QtPath = $env:Qt6_DIR
+}
+
 if (-not $QtPath) {
     # Check common Qt 6 locations
     $PossiblePaths = @(
